@@ -1,5 +1,6 @@
 import { useAuthStore } from "../store/auth";
 import axios from "./axios";
+import _axios from "axios";
 import jwt_decode from "jwt-decode";
 import Cookie from "js-cookie";
 import Swal from "sweetalert2";
@@ -219,10 +220,27 @@ export const getRefreshToken = async () => {
 export const getRefreshToken = async () => {
     try {
         const refresh_token = Cookie.get("refresh_token");
-        const response = await axios.post(`user/token/refresh/`, {
+
+        if (!refresh_token) {
+            console.warn("No refresh token available. Logging out...");
+            logout();
+            return null;
+        }
+
+        console.log("Attempting token refresh with:", refresh_token);
+
+        const response = await _axios.post(`http://127.0.0.1:8000/api/v1/user/token/refresh/`, {
             refresh: refresh_token,
         });
-        return response;
+
+        if (response.status === 200) {
+            console.log("Token refresh successful:", response.data);
+            return response;  // Return new token data
+        } else {
+            console.error("Unexpected response during token refresh:", response);
+            logout();
+            return null;
+        }
     } catch (error) {
         console.error("Failed to refresh token:", error);
         logout(); // Log the user out if refresh fails
@@ -247,11 +265,21 @@ export const isAccessTokenExpired = (access_token) => {
 
 // No changes needed here, but made sure that any error during decoding defaults to token expiration
 export const isAccessTokenExpired = (access_token) => {
+    if (!access_token) {
+        console.warn("No access token found, considering expired.");
+        return true;
+    }
+
     try {
         const decodedToken = jwt_decode(access_token);
-        return decodedToken.exp < Date.now() / 1000;
+        const expiryTime = decodedToken.exp * 1000;  // Convert to milliseconds
+        const currentTime = Date.now();
+
+        console.log(`Token Expiry Time: ${new Date(expiryTime)} | Current Time: ${new Date(currentTime)}`);
+
+        return expiryTime <= currentTime + 5000;  // Consider expired if expiring in the next 5 seconds
     } catch (error) {
         console.error("Error decoding token:", error);
-        return true; // Consider token expired if decoding fails
+        return true;  // If decoding fails, assume token is expired
     }
 };

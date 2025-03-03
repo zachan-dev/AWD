@@ -948,7 +948,14 @@ class CourseCreateAPIView(APIView):
         category = request.data.get("category")
 
         category_obj = api_models.Category.objects.filter(id=category).first()
-        teacher = api_models.Teacher.objects.get(user=request.user)
+        
+        # Get or create teacher profile
+        teacher, created = api_models.Teacher.objects.get_or_create(
+            user=request.user,
+            defaults={
+                'full_name': request.user.full_name,
+            }
+        )
 
         course = api_models.Course.objects.create(
             teacher=teacher,

@@ -121,10 +121,10 @@ function BaseFooter() {
                             </p>
                             <div className="d-flex">
                                 <a href="#">
-                                    <img src="../../assets/images/svg/appstore.svg" alt="" className="img-fluid" />
+                                    <img src="/images/svg/appstore.svg" alt="" className="img-fluid" />
                                 </a>
                                 <a href="#" className="ms-2">
-                                    <img src="../../assets/images/svg/playstore.svg" alt="" className="img-fluid" />
+                                    <img src="/images/svg/playstore.svg" alt="" className="img-fluid" />
                                 </a>
                             </div>
                         </div>

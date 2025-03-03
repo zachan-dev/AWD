@@ -38,10 +38,10 @@ const useAxios = () => {
 // - Checks and refreshes tokens only when necessary for authenticated endpoints
 
 import axios from "axios";
-import { setAuthUser, getRefreshToken, isAccessTokenExpired } from "./auth";
+import { setAuthUser, getRefreshToken, isAccessTokenExpired, logout } from "./auth";
 import Cookie from "js-cookie";
 
-// Create an Axios instance with default settings
+// Create an Axios instance
 const useAxios = axios.create({
     baseURL: "http://127.0.0.1:8000/api/v1/",
     timeout: 10000000,
@@ -50,50 +50,61 @@ const useAxios = axios.create({
     },
 });
 
-// Request interceptor for adding authentication token if available
+let isRefreshing = false;
+let refreshPromise = null; // Store refresh request for parallel requests
+
 useAxios.interceptors.request.use(
     async (config) => {
-        const accessToken = Cookie.get("access_token"); // Updated cookie names for consistency with your app
+        let accessToken = Cookie.get("access_token");
 
-        // If the access token exists, add it to the Authorization header
-        if (accessToken) {
-            config.headers.Authorization = `Bearer ${accessToken}`;
-        }
+        console.log("[useAxios] Checking token expiration...");
 
-        // If the access token is expired, attempt to refresh it
-        if (isAccessTokenExpired(accessToken)) {
-            const refreshToken = Cookie.get("refresh_token"); // Updated for consistency
-            if (refreshToken) {
+        if (!accessToken || isAccessTokenExpired(accessToken)) {
+            console.warn("[useAxios] Access token expired. Attempting refresh...");
+
+            if (!isRefreshing) {
+                isRefreshing = true;
+
                 try {
-                    const response = await getRefreshToken(refreshToken);
+                    refreshPromise = getRefreshToken(refreshToken); // Start refresh process
+                    const newTokens = await refreshPromise;
 
-                    // Update the token cookies and headers
-                    setAuthUser(response.data.access, response.data.refresh);
-                    config.headers.Authorization = `Bearer ${response.data.access}`;
+                    if (newTokens) {
+                        setAuthUser(newTokens.data.access, newTokens.data.refresh);
+                        console.log("[useAxios] Refresh successful. New token:", newTokens.data.access);
+                        accessToken = newTokens.access;
+                        config.headers.Authorization = `Bearer ${newTokens.data.access}`;
+                    } else {
+                        console.error("[useAxios] Refresh failed. Logging out.");
+                        logout();
+                        return Promise.reject("[useAxios] Session expired, logging out.");
+                    }
                 } catch (error) {
-                    // Handle refresh token failure (e.g., log out user or show an error message)
-                    console.error("Token refresh failed:", error);
+                    console.error("[useAxios] Refresh failed, logging out:", error);
+                    logout();
+                    return Promise.reject("[useAxios] Session expired, logging out.");
+                } finally {
+                    isRefreshing = false;
+                    refreshPromise = null;
                 }
+            } else {
+                console.log("[useAxios] Waiting for another refresh attempt...");
+                await refreshPromise; // Wait for the other refresh attempt to complete
+                accessToken = Cookie.get("access_token"); // Fetch latest token
             }
+
+            if (!accessToken) {
+                return Promise.reject("[useAxios] No access token after refresh, logging out.");
+            }
+
+            config.headers.Authorization = `Bearer ${accessToken}`;
+        } else {
+            config.headers.Authorization = `Bearer ${accessToken}`;
         }
 
         return config;
     },
     (error) => Promise.reject(error)
-);
-
-// Response interceptor for handling errors
-useAxios.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        // Handle specific error cases if needed
-        if (error.response && error.response.status === 401) {
-            // Handle unauthorized errors (e.g., redirect to login)
-            console.error("Unauthorized access - you may need to log in:", error);
-        }
-
-        return Promise.reject(error);
-    }
 );
 
 export default useAxios;
