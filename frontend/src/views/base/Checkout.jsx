@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
 import apiInstance from "../../utils/axios";
 import Toast from "../plugin/Toast";
-import { PAYPAL_CLIENT_ID } from "../../utils/constants";
 
 function Checkout() {
     const [order, setOrder] = useState([]);
@@ -55,12 +53,11 @@ function Checkout() {
     }, []);
 
     const initialOptions = {
-        clientId: PAYPAL_CLIENT_ID,
         currency: "USD",
         intent: "capture",
     };
 
-    const payWithStripe = (event) => {
+    const handlePayButton = (event) => {
         setPaymentLoading(true);
         event.target.form.submit();
     };
@@ -229,49 +226,19 @@ function Checkout() {
                                                 </li>
                                             </ul>
                                             <div className="d-grid">
-                                                <form action={`http://127.0.0.1:8000/api/v1/payment/stripe-checkout/${order.oid}/`} className="w-100" method="POST">
+                                                <form action={`http://127.0.0.1:8000/api/v1/payment/checkout/${order.oid}/`} className="w-100" method="POST">
                                                     {paymentLoading === true ? (
                                                         <button type="submit" disabled className="btn btn-lg btn-success mt-2 w-100">
                                                             {" "}
                                                             Processing <i className="fas fa-spinner f a-spin"></i>
                                                         </button>
                                                     ) : (
-                                                        <button type="submit" onClick={payWithStripe} className="btn btn-lg btn-success mt-2 w-100">
+                                                        <button type="submit" onClick={handlePayButton} className="btn btn-lg btn-success mt-2 w-100">
                                                             {" "}
-                                                            Pay With Stripe
+                                                            Pay and Enroll
                                                         </button>
                                                     )}
                                                 </form>
-
-                                                <PayPalScriptProvider options={initialOptions}>
-                                                    <PayPalButtons
-                                                        className="mt-3"
-                                                        createOrder={(data, actions) => {
-                                                            return actions.order.create({
-                                                                purchase_units: [
-                                                                    {
-                                                                        amount: {
-                                                                            currency_code: "USD",
-                                                                            value: order.total.toString(),
-                                                                        },
-                                                                    },
-                                                                ],
-                                                            });
-                                                        }}
-                                                        onApprove={(data, actions) => {
-                                                            return actions.order.capture().then((details) => {
-                                                                const name = details.payer.name.given_name;
-                                                                const status = details.status;
-                                                                const paypal_order_id = data.orderID;
-
-                                                                console.log(status);
-                                                                if (status === "COMPLETED") {
-                                                                    navigate(`/payment-success/${order.oid}/?paypal_order_id=${paypal_order_id}`);
-                                                                }
-                                                            });
-                                                        }}
-                                                    />
-                                                </PayPalScriptProvider>
                                             </div>
                                             <p className="small mb-0 mt-2 text-center">
                                                 By proceeding to payment, you agree to these{" "}

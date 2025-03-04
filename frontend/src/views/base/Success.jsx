@@ -13,10 +13,8 @@ function Success() {
     const param = useParams();
     const urlParam = new URLSearchParams(window.location.search);
     const sessionId = urlParam.get("session_id");
-    const paypalOrderId = urlParam.get("paypal_order_id");
 
     console.log(sessionId);
-    console.log(paypalOrderId);
     console.log(param);
 
     useEffect(() => {
@@ -24,12 +22,11 @@ function Success() {
 
         formdata.append("order_oid", param.order_oid);
         formdata.append("session_id", sessionId);
-        formdata.append("paypal_order_id", paypalOrderId);
 
         setOrderMessage("Processing Payment");
 
         try {
-            apiInstance.post(`payment/payment-sucess/`, formdata).then((res) => {
+            apiInstance.post(`payment/payment-success/`, formdata).then((res) => {
                 console.log(res.data);
                 setOrderMessage(res.data.message);
             });
@@ -47,12 +44,12 @@ function Success() {
             <section className="pt-0  position-relative overflow-hidden my-auto">
                 <div className="container position-relative">
                     <div className="row g-5 align-items-center justify-content-center">
-                        {/* Payment Successfull */}
-                        {orderMessage === "Payment Successfull" && (
+                        {/* Payment Successful */}
+                        {orderMessage === "Payment Successful" && (
                             <>
                                 <div className="col-lg-5">
                                     <h1 className="text-success">Enrollment Successful!</h1>
-                                    <p>Your enrollment was successfull, please visit your dashboard to start course now.</p>
+                                    <p>Your enrollment was successful, please visit your dashboard to start course now.</p>
                                 </div>
                                 <div className="col-lg-7 text-center">
                                     <img src="https://i.pinimg.com/originals/0d/e4/1a/0de41a3c5953fba1755ebd416ec109dd.gif" className="h-300px h-sm-400px h-md-500px h-xl-700px" alt="" />
@@ -65,7 +62,7 @@ function Success() {
                             <>
                                 <div className="col-lg-5">
                                     <h1 className="text-success">Enrollment Successful!</h1>
-                                    <p>Your enrollment was successfull, please visit your dashboard to start course now.</p>
+                                    <p>Your enrollment was successful, please visit your dashboard to start course now.</p>
                                 </div>
                                 <div className="col-lg-7 text-center">
                                     <img src="https://i.pinimg.com/originals/0d/e4/1a/0de41a3c5953fba1755ebd416ec109dd.gif" className="h-300px h-sm-400px h-md-500px h-xl-700px" alt="" />

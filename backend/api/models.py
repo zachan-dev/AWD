@@ -257,7 +257,7 @@ class CartOrder(models.Model):
     email = models.CharField(max_length=255, null=True, blank=True)
     country = models.CharField(max_length=255, null=True, blank=True)
     coupons = models.ManyToManyField("api.Coupon", blank=True)
-    stripe_session_id = models.CharField(max_length=1000, null=True, blank=True)
+    payment_session_id = models.CharField(max_length=1000, null=True, blank=True)
     oid = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     date = models.DateTimeField(default=timezone.now)
 
