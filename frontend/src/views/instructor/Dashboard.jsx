@@ -8,6 +8,7 @@ import BaseFooter from "../partials/BaseFooter";
 
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
+import { Link } from "react-router-dom";
 
 function Dashboard() {
     const [stats, setStats] = useState([]);
@@ -191,9 +192,9 @@ function Dashboard() {
                                                         <p className="mt-3">{moment(c.date).format("DD MMM, YYYY")}</p>
                                                     </td>
                                                     <td>
-                                                        <button className="btn btn-primary btn-sm mt-3 me-1">
+                                                        <Link to={`/instructor/edit-course/${c.course_id}/`} className="btn btn-primary btn-sm mt-3 me-1">
                                                             <i className="fas fa-edit"></i>
-                                                        </button>
+                                                        </Link>
                                                         <button className="btn btn-danger btn-sm mt-3 me-1">
                                                             <i className="fas fa-trash"></i>
                                                         </button>

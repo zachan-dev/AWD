@@ -738,7 +738,7 @@ class TeacherReviewDetailAPIView(generics.RetrieveUpdateAPIView):
         teacher = api_models.Teacher.objects.get(id=teacher_id)
         return api_models.Review.objects.get(course__teacher=teacher, id=review_id)
 
-class TeacherStudentsListAPIVIew(viewsets.ViewSet):
+class TeacherStudentsListAPIView(viewsets.ViewSet):
     
     def list(self, request, teacher_id=None):
         teacher = api_models.Teacher.objects.get(id=teacher_id)
@@ -761,6 +761,36 @@ class TeacherStudentsListAPIVIew(viewsets.ViewSet):
                 unique_student_ids.add(course.user_id)
 
         return Response(students)
+    
+class TeacherTeachersListAPIView(viewsets.ViewSet):
+
+    def list(self, request, teacher_id=None):
+        # Get the current teacher safely (returns None if not found)
+        current_teacher = api_models.Teacher.objects.filter(id=teacher_id).first()
+        
+        # If the current user is not a teacher, return an empty response
+        if not current_teacher:
+            teachers_with_courses = api_models.Teacher.objects.all()
+        else:
+            # Find teachers who are teaching at least one course, excluding the current teacher
+            teachers_with_courses = api_models.Teacher.objects.exclude(id=current_teacher.id)  # Exclude current teacher
+        
+        teachers = []
+
+        for teacher in teachers_with_courses:
+            # Query Course model directly to check if teacher is teaching at least 1 course
+            total_courses = api_models.Course.objects.filter(teacher=teacher).count()
+
+            if total_courses > 0:  # Only add teachers with courses
+                teacher_data = {
+                    "full_name": teacher.full_name,
+                    "image": teacher.user.profile.image.url if teacher.user.profile.image else None,
+                    "country": teacher.user.profile.country,
+                    "total_courses": total_courses,
+                }
+                teachers.append(teacher_data)
+
+        return Response(teachers)
 
 @api_view(("GET", ))
 def TeacherAllMonthEarningAPIView(request, teacher_id):
@@ -980,7 +1010,7 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
         if 'file' in request.data and not str(request.data['file']).startswith("http://"):
             course.file = request.data['file']
 
-        if 'category' in request.data['category'] and request.data['category'] != 'NaN' and request.data['category'] != "undefined":
+        if 'category' in request.data and request.data['category'] != 'NaN' and request.data['category'] != "undefined":
             category = api_models.Category.objects.get(id=request.data['category'])
             course.category = category
 
@@ -989,6 +1019,10 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     def update_variant(self, course, request_data):
+        if not isinstance(request_data, dict):
+            print("Invalid data format: Expected a dictionary")
+            return
+        
         for key, value in request_data.items():
             if key.startswith("variants") and '[variant_title]' in key:
 
@@ -1020,7 +1054,10 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                     existing_variant.title = title
                     existing_variant.save()
 
-                    for item_data in item_data_list[1:]:
+                    for item_data in item_data_list:
+                        if "title" not in item_data:
+                            continue
+
                         preview_value = item_data.get("preview")
                         preview = bool(strtobool(str(preview_value))) if preview_value is not None else False
 
@@ -1110,7 +1147,7 @@ class CourseVariantDeleteAPIView(generics.DestroyAPIView):
 
         teacher = api_models.Teacher.objects.get(id=teacher_id)
         course = api_models.Course.objects.get(teacher=teacher, course_id=course_id)
-        return api_models.Variant.objects.get(id=variant_id)
+        return api_models.Variant.objects.get(variant_id=variant_id)
     
 class CourseVariantItemDeleteAPIVIew(generics.DestroyAPIView):
 

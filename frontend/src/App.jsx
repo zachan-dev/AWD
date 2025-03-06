@@ -33,6 +33,7 @@ import Dashboard from "./views/instructor/Dashboard";
 import Courses from "./views/instructor/Courses";
 import Review from "./views/instructor/Review";
 import Students from "./views/instructor/Students";
+import Teachers from './views/instructor/Teachers';
 import Earning from "./views/instructor/Earning";
 import Orders from "./views/instructor/Orders";
 import Coupon from "./views/instructor/Coupon";
@@ -168,6 +169,14 @@ function App() {
                                 element={
                                     <PrivateRoute>
                                         <Students />
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/instructor/teachers/"
+                                element={
+                                    <PrivateRoute>
+                                        <Teachers />
                                     </PrivateRoute>
                                 }
                             />

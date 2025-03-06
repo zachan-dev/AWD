@@ -85,3 +85,5 @@ ipython_config.py
 
 # pipenv
 #   According to pypa/pipenv#598, it is recommended to
+
+media/*

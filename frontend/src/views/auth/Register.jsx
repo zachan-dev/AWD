@@ -26,7 +26,7 @@ function Register() {
       setIsLoading(false);
     } else {
       navigate("/");
-      alert("Registration Successfull, you have now been logged in");
+      alert("Registration Successful, you have now been logged in");
       setIsLoading(false);
     }
   };

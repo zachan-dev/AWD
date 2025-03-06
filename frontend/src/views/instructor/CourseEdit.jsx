@@ -95,23 +95,28 @@ function CourseEdit() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const json = {
-            title: courseData?.title,
-            description: courseData?.description,
-            image: courseData?.image,
-            file: courseData?.file,
-            level: courseData?.level,
-            language: courseData?.language,
-            price: courseData?.price,
-            category: courseData?.category,
-        };
+        const formdata = new FormData();
+        formdata.append("title", courseData?.title);
+        formdata.append("description", courseData?.description);
+        formdata.append("category", courseData?.category);
+        formdata.append("price", courseData?.price);
+        formdata.append("level", courseData?.level);
+        formdata.append("language", courseData?.language);
+        formdata.append("teacher", parseInt(UserData()?.teacher_id));
+        console.log(courseData?.category);
 
-        const response = await useAxios.post(`teacher/course-create/`, json);
-        console.log(response.data);
-        navigate(`/instructor/edit-course/${response?.data?.course_id}/`);
+        if (courseData?.file !== null || courseData?.file !== "") {
+            formdata.append("file", courseData?.file || "");
+        }
+
+        if (courseData?.image) {
+            formdata.append("image", courseData?.image);
+        }
+
+        const response = await useAxios.patch(`teacher/course-update/${UserData()?.teacher_id}/${param.course_id}/`, formdata);
         Swal.fire({
             icon: "success",
-            title: "Course Created Successfully",
+            title: "Course Updated Successfully",
         });
     };
 
