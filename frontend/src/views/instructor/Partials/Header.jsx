@@ -1,8 +1,16 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { ProfileContext } from "../../plugin/Context";
+import useAxios from "../../../utils/useAxios";
+import UserData from "../../plugin/UserData";
 
 function Header() {
   const [profile, setProfile] = useContext(ProfileContext);
+
+  useEffect(() => { // fetch once more profile while rendering this element
+    useAxios.get(`user/profile/${UserData()?.user_id}/`).then((res) => {
+        setProfile(res.data);
+    });
+  }, []);
 
   return (
     <div className="row align-items-center">
@@ -12,7 +20,7 @@ function Header() {
             <div className="d-flex align-items-center">
               <div className="me-2 position-relative d-flex justify-content-end align-items-end mt-n5">
                 <img
-                  src={profile.image}
+                  src={profile?.image || "/images/avatar/default-user.jpg"}
                   className="avatar-xl rounded-circle border border-4 border-white"
                   alt="avatar"
                   style={{
@@ -24,8 +32,8 @@ function Header() {
                 />
               </div>
               <div className="lh-1">
-                <h2 className="mb-0"> {profile.full_name}</h2>
-                <p className="mb-0 d-block">{profile.about}</p>
+                <h2 className="mb-0"> {profile?.full_name || "User"}</h2>
+                <p className="mb-0 d-block">{profile?.about || "No bio available"}</p>
               </div>
             </div>
             <div>

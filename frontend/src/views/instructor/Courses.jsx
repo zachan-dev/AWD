@@ -148,9 +148,9 @@ function Courses() {
                                                         <button className="btn btn-danger btn-sm mt-3 me-1">
                                                             <i className="fas fa-trash"></i>
                                                         </button>
-                                                        <button className="btn btn-secondary btn-sm mt-3 me-1">
+                                                        <Link to={`/instructor/courses/${c.course_id}/`} className="btn btn-secondary btn-sm mt-3 me-1">
                                                             <i className="fas fa-eye"></i>
-                                                        </button>
+                                                        </Link>
                                                     </td>
                                                 </tr>
                                             ))}

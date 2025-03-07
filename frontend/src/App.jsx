@@ -26,11 +26,13 @@ import StudentCourses from "./views/student/Courses";
 import StudentCourseDetail from "./views/student/CourseDetail";
 import Wishlist from "./views/student/Wishlist";
 import StudentProfile from "./views/student/Profile";
+import StudentNotification from "./views/student/StudentNotification";
 import useAxios from "./utils/useAxios";
 import UserData from "./views/plugin/UserData";
 import StudentChangePassword from "./views/student/ChangePassword";
 import Dashboard from "./views/instructor/Dashboard";
 import Courses from "./views/instructor/Courses";
+import TeacherCourseDetail from "./views/instructor/CourseDetail";
 import Review from "./views/instructor/Review";
 import Students from "./views/instructor/Students";
 import Teachers from './views/instructor/Teachers';
@@ -106,6 +108,14 @@ function App() {
                                 }
                             />
                             <Route
+                                path="/student/notifications/"
+                                element={
+                                    <PrivateRoute>
+                                        <StudentNotification />
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
                                 path="/student/wishlist/"
                                 element={
                                     <PrivateRoute>
@@ -141,18 +151,18 @@ function App() {
                                 }
                             />
                             <Route
-                                path="/instructor/dashboard/"
-                                element={
-                                    <PrivateRoute>
-                                        <Dashboard />
-                                    </PrivateRoute>
-                                }
-                            />
-                            <Route
                                 path="/instructor/courses/"
                                 element={
                                     <PrivateRoute>
                                         <Courses />
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/instructor/courses/:course_id/"
+                                element={
+                                    <PrivateRoute>
+                                        <TeacherCourseDetail />
                                     </PrivateRoute>
                                 }
                             />

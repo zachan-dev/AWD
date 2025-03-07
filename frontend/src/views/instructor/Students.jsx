@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import moment from "moment";
+import Swal from "sweetalert2";  // Import Swal for modal
 
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
@@ -10,7 +11,7 @@ import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 
 function Students() {
-    const [student, setStudents] = useState([]);
+    const [students, setStudents] = useState([]);
 
     useEffect(() => {
         useAxios.get(`teacher/student-lists/${UserData()?.teacher_id}/`).then((res) => {
@@ -18,6 +19,33 @@ function Students() {
             setStudents(res.data);
         });
     }, []);
+
+    const removeStudent = (studentUsername) => {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "This will remove the student from all your courses.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, remove",
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await useAxios.delete(`teacher/remove-student/${UserData()?.teacher_id}/${studentUsername}/`);
+                    
+                    // Update UI after successful removal
+                    setStudents(students.filter((s) => s.username !== studentUsername));
+
+                    Swal.fire("Removed!", "The student has been removed.", "success");
+                } catch (error) {
+                    console.error("Error removing student:", error);
+                    Swal.fire("Error!", "Failed to remove student.", "error");
+                }
+            }
+        });
+    };
+
     return (
         <>
             <BaseHeader />
@@ -43,9 +71,15 @@ function Students() {
                             </div>
                             {/* Tab content */}
                             <div className="row">
-                                {student?.map((s, index) => (
-                                    <div className="col-lg-4 col-md-6 col-12">
-                                        <div className="card mb-4">
+                                {students?.map((s, index) => (
+                                    <div key={s.username} className="col-lg-4 col-md-6 col-12">
+                                        <div className="card mb-4 position-relative">
+                                            <button
+                                                className="btn btn-sm btn-danger position-absolute top-0 end-0 m-2"
+                                                onClick={() => removeStudent(s.username)}
+                                            >
+                                                <i className="fas fa-trash"></i>
+                                            </button>
                                             <div className="card-body">
                                                 <div className="text-center">
                                                     <img
@@ -61,13 +95,14 @@ function Students() {
                                                     />
                                                     <h4 className="mb-1">{s.full_name}</h4>
                                                     <p className="mb-0">
-                                                        {" "}
-                                                        <i className="fas fa-map-pin me-1" /> {s.country}{" "}
+                                                        <i className="fas fa-map-pin me-1" /> {s.country}
                                                     </p>
                                                 </div>
                                                 <div className="d-flex justify-content-between py-2 mt-4 fs-6">
                                                     <span>Enrolled</span>
-                                                    <span className="text-dark">{moment(s.date).format("DD MMM YYYY")}</span>
+                                                    <span className="text-dark">
+                                                        {moment(s.date).format("DD MMM YYYY")}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>

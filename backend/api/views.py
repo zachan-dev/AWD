@@ -6,8 +6,7 @@ from django.contrib.auth.hashers import check_password
 from django.db import models
 from django.db.models.functions import ExtractMonth
 from django.core.files.uploadedfile import InMemoryUploadedFile
-
-
+from django.shortcuts import get_object_or_404
 
 
 from api import serializer as api_serializer
@@ -584,6 +583,15 @@ class StudentRateCourseUpdateAPIView(generics.RetrieveUpdateAPIView):
 
         user = User.objects.get(id=user_id)
         return api_models.Review.objects.get(id=review_id, user=user)
+    
+class StudentNotificationListAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.NotificationSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        user = api_models.User.objects.get(id=user_id)
+        return api_models.Notification.objects.filter(user=user, seen=False)
 
 class StudentWishListListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = api_serializer.WishlistSerializer
@@ -718,6 +726,13 @@ class TeacherCourseListAPIView(generics.ListAPIView):
         teacher_id = self.kwargs['teacher_id']
         teacher = api_models.Teacher.objects.get(id=teacher_id)
         return api_models.Course.objects.filter(teacher=teacher)
+    
+class TeacherCourseDetailPreviewAPIView(generics.RetrieveAPIView):
+    serializer_class = api_serializer.CourseSerializer
+    permission_classes = [AllowAny]
+    queryset = api_models.Course.objects.all()
+    lookup_field = "course_id"
+
 
 class TeacherReviewListAPIView(generics.ListAPIView):
     serializer_class = api_serializer.ReviewSerializer
@@ -751,6 +766,7 @@ class TeacherStudentsListAPIView(viewsets.ViewSet):
             if course.user_id not in unique_student_ids:
                 user = User.objects.get(id=course.user_id)
                 student = {
+                    "username": user.username,
                     "full_name": user.profile.full_name,
                     "image": user.profile.image.url,
                     "country": user.profile.country,
@@ -791,6 +807,40 @@ class TeacherTeachersListAPIView(viewsets.ViewSet):
                 teachers.append(teacher_data)
 
         return Response(teachers)
+
+class TeacherRemoveStudentAPIView(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]  # Ensure user is logged in
+
+    def delete(self, request, teacher_id, student_username):
+        # Get the teacher from the ID
+        teacher = get_object_or_404(api_models.Teacher, id=teacher_id)
+
+        # Ensure the logged-in user is the teacher performing the action
+        if request.user != teacher.user:
+            return Response(
+                {"error": "You are not authorized to remove students from this teacher's courses"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get the student by username
+        student = get_object_or_404(User, username=student_username)
+
+        # Find all enrollments for this teacher and student
+        enrollments = api_models.EnrolledCourse.objects.filter(teacher=teacher, user=student)
+
+        if not enrollments.exists():
+            return Response(
+                {"error": "No enrollment found for this student and teacher"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        deleted_count, _ = enrollments.delete()  # Delete matching records
+
+        return Response(
+            {"message": f"Removed {deleted_count} enrollment(s) for {student.username}"},
+            status=status.HTTP_200_OK
+        )
+
 
 @api_view(("GET", ))
 def TeacherAllMonthEarningAPIView(request, teacher_id):
@@ -1085,6 +1135,10 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                                     file=file,
                                     preview=preview
                                 )
+                                # Find all students in the course and notify them
+                                enrolledCourses = api_models.EnrolledCourse.objects.filter(course=course).select_related('user')
+                                for enrolledCourse in enrolledCourses:
+                                    api_models.Notification.objects.create(user=enrolledCourse.user, order_item=enrolledCourse.order_item, type="New Course File Uploaded")
                         
                         else:
                             title = item_data.get("title")
@@ -1120,6 +1174,10 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                             file=item_data.get("file"),
                             preview=preview,
                         )
+                        # Find all students in the course and notify them
+                        enrolledCourses = api_models.EnrolledCourse.objects.filter(course=course).select_related('user')
+                        for enrolledCourse in enrolledCourses:
+                            api_models.Notification.objects.create(user=enrolledCourse.user, order_item=enrolledCourse.order_item, type="New Course File Uploaded")
 
     def save_nested_data(self, course_instance, serializer_class, data):
         serializer = serializer_class(data=data, many=True, context={"course_instance": course_instance})

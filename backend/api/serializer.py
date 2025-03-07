@@ -222,6 +222,8 @@ class ReviewSerializer(serializers.ModelSerializer):
             self.Meta.depth = 3
 
 class NotificationSerializer(serializers.ModelSerializer):
+    order = CartOrderSerializer(read_only=True)
+    order_item = CartOrderItemSerializer(read_only=True)
 
     class Meta:
         fields = '__all__'

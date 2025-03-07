@@ -7,6 +7,7 @@ from userauths.models import User, Profile
 from shortuuid.django_fields import ShortUUIDField
 from moviepy.editor import VideoFileClip
 import math
+import os
 
 LANGUAGE = (
     ("English", "English"),
@@ -57,6 +58,7 @@ NOTI_TYPE = (
     ("Draft", "Draft"),
     ("Course Published", "Course Published"),
     ("Course Enrollment Completed", "Course Enrollment Completed"),
+    ("New Course File Uploaded", "New Course File Uploaded"),
 )
 
 class Teacher(models.Model):
@@ -178,21 +180,34 @@ class VariantItem(models.Model):
     def __str__(self):
         return f"{self.variant.title} - {self.title}"
     
-    # def save(self, *args, **kwargs):
-    #     super().save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        """Override save method to calculate video duration if it's a valid video"""
+        super().save(*args, **kwargs)  # Save the file first
 
-    #     if self.file:
-    #         clip = VideoFileClip(self.file.path)
-    #         duration_seconds = clip.duration
+        if self.file:
+            file_path = self.file.path
+            file_extension = os.path.splitext(file_path)[1].lower()  # Get file extension
 
-    #         minutes, remainder = divmod(duration_seconds, 60)  
+            video_extensions = [".mp4", ".avi", ".mov", ".mkv", ".flv", ".wmv", ".webm"]  # ✅ Common video formats
 
-    #         minutes = math.floor(minutes)
-    #         seconds = math.floor(remainder)
+            if file_extension in video_extensions:
+                try:
+                    clip = VideoFileClip(file_path)
+                    duration_seconds = clip.duration
 
-    #         duration_text = f"{minutes}m {seconds}s"
-    #         self.content_duration = duration_text
-    #         super().save(update_fields=['content_duration'])
+                    minutes, remainder = divmod(duration_seconds, 60)
+                    minutes = math.floor(minutes)
+                    seconds = math.floor(remainder)
+
+                    self.content_duration = f"{minutes}m {seconds}s"
+                    super().save(update_fields=["content_duration"])  # Update only this field
+                except Exception as e:
+                    print(f"Error processing video file {file_path}: {e}")
+                    self.content_duration = "Unknown"  # If video processing fails, mark it
+                    super().save(update_fields=["content_duration"])
+            else:
+                self.content_duration = "N/A"  # Set 'N/A' if it's not a video
+                super().save(update_fields=["content_duration"])
 
 class Question_Answer(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)

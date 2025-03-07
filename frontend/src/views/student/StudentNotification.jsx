@@ -4,8 +4,8 @@ import moment from "moment";
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
 
-import Sidebar from "./Partials/Sidebar";
-import Header from "./Partials/Header";
+import Sidebar from "../student/Partials/Sidebar";
+import Header from "../student/Partials/Header";
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
 
@@ -13,11 +13,11 @@ import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 
-function TeacherNotification() {
+function StudentNotification() {
     const [noti, setNoti] = useState([]);
 
     const fetchNoti = () => {
-        useAxios.get(`teacher/noti-list/${UserData()?.teacher_id}/`).then((res) => {
+        useAxios.get(`student/noti-list/${UserData()?.user_id}/`).then((res) => {
             setNoti(res.data);
             console.log(res.data);
         });
@@ -85,10 +85,10 @@ function TeacherNotification() {
                                                                     Date: <span className="fw-light">{moment(n.date).format("DD MMM, YYYY")}</span>
                                                                 </span>
                                                             </p>
-                                                            {(n.type == "New Order") &&
+                                                            {(n.type == "New Course File Uploaded") &&
                                                                 <p className="mt-1">
                                                                     <span className="me-2 fw-light">
-                                                                        Student - {n.order.full_name} enrolled in your course.
+                                                                        A new course file has been uploaded to your course - {n.order_item?.course?.title}.
                                                                     </span>
                                                                 </p>
                                                             }
@@ -117,4 +117,4 @@ function TeacherNotification() {
     );
 }
 
-export default TeacherNotification;
+export default StudentNotification;
