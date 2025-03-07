@@ -156,3 +156,4 @@ urllib3==2.3.0
     #   requests
 moviepy==1.0.3
     # via manual install
+daphne==4.1.2

@@ -36,6 +36,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'jazzmin', 
 
     'django.contrib.admin',
@@ -55,7 +56,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'anymail',
-    'drf_yasg'
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -86,6 +87,14 @@ TEMPLATES = [
         },
     },
 ]
+
+ASGI_APPLICATION = "backend.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
