@@ -9,7 +9,7 @@ import BaseFooter from "../partials/BaseFooter";
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import useAxios from "../../utils/useAxios";
-import UserData from "../plugin/UserData";
+import ChatRoom from "../ChatRoom";
 
 function CourseDetail() {
     const [course, setCourse] = useState([]);
@@ -23,6 +23,11 @@ function CourseDetail() {
         setShow(true);
         setVariantItem(variant_item);
     };
+
+     // Chat Modal state
+    const [showChat, setShowChat] = useState(false);
+    const handleShowChat = () => setShowChat(true);
+    const handleCloseChat = () => setShowChat(false);
 
     const fetchCourseDetail = async () => {
         useAxios.get(`teacher/course-detail-preview/${param.course_id}/`).then((res) => {
@@ -151,6 +156,11 @@ function CourseDetail() {
                 </div>
             </section>
 
+            {/* Floating Chat Button */}
+            <div className="floating-chat-button" onClick={handleShowChat}>
+                <i className="fas fa-comment-dots"></i>
+            </div>
+
             {/* Lecture Modal */}
             <Modal show={show} size="lg" onHide={handleClose}>
                 <Modal.Header closeButton>
@@ -164,6 +174,16 @@ function CourseDetail() {
                         Close
                     </Button>
                 </Modal.Footer>
+            </Modal>
+
+            {/* Chat Modal */}
+            <Modal show={showChat} onHide={handleCloseChat} centered>
+                <Modal.Header closeButton>
+                <Modal.Title>Course Chat</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                <ChatRoom courseId={course.course_id} role="Instructor" />
+                </Modal.Body>
             </Modal>
 
             <BaseFooter />

@@ -66,3 +66,25 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 } */
+
+.floating-chat-button {
+  position: fixed;
+  bottom: 20px;         /* Distance from the bottom */
+  right: 20px;          /* Distance from the right */
+  background-color: #007bff; /* Primary blue background */
+  border-radius: 50%;   /* Circular shape */
+  width: 50px;          /* Width of the button */
+  height: 50px;         /* Height of the button */
+  color: #fff;          /* White icon/text */
+  display: flex;        /* Use flexbox to center content */
+  align-items: center;  /* Center vertically */
+  justify-content: center; /* Center horizontally */
+  cursor: pointer;      /* Pointer cursor on hover */
+  z-index: 1000;        /* Ensure it appears above other elements */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
+  transition: background-color 0.3s ease; /* Smooth hover effect */
+}
+
+.floating-chat-button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}

@@ -12,6 +12,7 @@ import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import moment from "moment";
+import ChatRoom from "../ChatRoom";
 
 function CourseDetail() {
     const [course, setCourse] = useState([]);
@@ -56,6 +57,11 @@ function CourseDetail() {
     const [addQuestionShow, setAddQuestionShow] = useState(false);
     const handleQuestionClose = () => setAddQuestionShow(false);
     const handleQuestionShow = () => setAddQuestionShow(true);
+
+    // Chat Modal state
+    const [showChat, setShowChat] = useState(false);
+    const handleShowChat = () => setShowChat(true);
+    const handleCloseChat = () => setShowChat(false);
 
     const fetchCourseDetail = async () => {
         useAxios.get(`student/course-detail/${UserData()?.user_id}/${param.enrollment_id}/`).then((res) => {
@@ -577,6 +583,11 @@ function CourseDetail() {
                 </div>
             </section>
 
+            {/* Floating Chat Button */}
+            <div className="floating-chat-button" onClick={handleShowChat}>
+                <i className="fas fa-comment-dots"></i>
+            </div>
+
             {/* Lecture Modal */}
             <Modal show={show} size="lg" onHide={handleClose}>
                 <Modal.Header closeButton>
@@ -713,6 +724,16 @@ function CourseDetail() {
                             Send Message <i className="fas fa-check-circle"></i>
                         </button>
                     </form>
+                </Modal.Body>
+            </Modal>
+
+            {/* Chat Modal */}
+            <Modal show={showChat} onHide={handleCloseChat} centered>
+                <Modal.Header closeButton>
+                <Modal.Title>Course Chat</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                <ChatRoom courseId={course?.course?.course_id} role="Student" />
                 </Modal.Body>
             </Modal>
 
