@@ -761,10 +761,19 @@ class TeacherStudentsListAPIView(viewsets.ViewSet):
         enrolled_courses = api_models.EnrolledCourse.objects.filter(teacher=teacher)
         unique_student_ids = set()
         students = []
-
+        
+        # Retrieve the search keyword and normalize it for a case-insensitive match
+        query = request.query_params.get('q', '').strip().lower()
+        
         for course in enrolled_courses:
             if course.user_id not in unique_student_ids:
                 user = User.objects.get(id=course.user_id)
+                
+                # If a search query is provided, check if it is a substring of the username or full_name
+                if query:
+                    if query not in user.username.lower() and query not in user.profile.full_name.lower():
+                        continue  # Skip this student if no partial match is found
+                
                 student = {
                     "username": user.username,
                     "full_name": user.profile.full_name,
@@ -772,7 +781,6 @@ class TeacherStudentsListAPIView(viewsets.ViewSet):
                     "country": user.profile.country,
                     "date": course.date
                 }
-
                 students.append(student)
                 unique_student_ids.add(course.user_id)
 
@@ -781,23 +789,33 @@ class TeacherStudentsListAPIView(viewsets.ViewSet):
 class TeacherTeachersListAPIView(viewsets.ViewSet):
 
     def list(self, request, teacher_id=None):
-        # Get the current teacher safely (returns None if not found)
+        # Retrieve the current teacher safely (returns None if not found)
         current_teacher = api_models.Teacher.objects.filter(id=teacher_id).first()
         
-        # If the current user is not a teacher, return an empty response
+        # If the current teacher is not found, return all teachers with courses
         if not current_teacher:
             teachers_with_courses = api_models.Teacher.objects.all()
         else:
-            # Find teachers who are teaching at least one course, excluding the current teacher
-            teachers_with_courses = api_models.Teacher.objects.exclude(id=current_teacher.id)  # Exclude current teacher
+            # Exclude the current teacher from the search results
+            teachers_with_courses = api_models.Teacher.objects.exclude(id=current_teacher.id)
+        
+        # Retrieve the search keyword from query parameters and normalize it
+        query = request.query_params.get('q', '').strip().lower()
         
         teachers = []
-
+        
         for teacher in teachers_with_courses:
-            # Query Course model directly to check if teacher is teaching at least 1 course
+            # Query Course model to check if the teacher is teaching at least one course
             total_courses = api_models.Course.objects.filter(teacher=teacher).count()
-
-            if total_courses > 0:  # Only add teachers with courses
+            if total_courses > 0:
+                # If a search query is provided, filter teachers by their full name or username (partial match)
+                if query:
+                    # Check against teacher.full_name and teacher.user.username if available
+                    teacher_full_name = teacher.full_name.lower() if teacher.full_name else ""
+                    teacher_username = teacher.user.username.lower() if hasattr(teacher, 'user') and teacher.user.username else ""
+                    if query not in teacher_full_name and query not in teacher_username:
+                        continue  # Skip this teacher if no match is found
+                
                 teacher_data = {
                     "full_name": teacher.full_name,
                     "image": teacher.user.profile.image.url if teacher.user.profile.image else None,

@@ -12,13 +12,28 @@ import UserData from "../plugin/UserData";
 
 function Students() {
     const [students, setStudents] = useState([]);
+    const [searchQuery, setSearchQuery] = useState("");
 
+    // Function to fetch students with an optional search query.
+    const fetchStudents = (query = "") => {
+        useAxios
+            .get(`teacher/student-lists/${UserData()?.teacher_id}/`, { params: { q: query } })
+            .then((res) => {
+                console.log("res.data: ", res.data);
+                setStudents(res.data);
+            });
+    };
+
+    // Initial fetch with no search query.
     useEffect(() => {
-        useAxios.get(`teacher/student-lists/${UserData()?.teacher_id}/`).then((res) => {
-            console.log("res.data: ", res.data);
-            setStudents(res.data);
-        });
+        fetchStudents("");
     }, []);
+
+    // Trigger fetch when search form is submitted.
+    const handleSearch = (e) => {
+        e.preventDefault();
+        fetchStudents(searchQuery);
+    };
 
     const removeStudent = (studentUsername) => {
         Swal.fire({
@@ -52,26 +67,33 @@ function Students() {
 
             <section className="pt-5 pb-5">
                 <div className="container">
-                    {/* Header Here */}
                     <Header />
                     <div className="row mt-0 mt-md-4">
-                        {/* Sidebar Here */}
                         <Sidebar />
                         <div className="col-lg-9 col-md-8 col-12">
-                            {/* Card */}
                             <div className="card mb-4">
-                                {/* Card body */}
                                 <div className="p-4 d-flex justify-content-between align-items-center">
                                     <div>
                                         <h3 className="mb-0">Students</h3>
                                         <span>Meet people taking your course.</span>
                                     </div>
-                                    {/* Nav */}
+                                    {/* Search Bar */}
+                                    <form onSubmit={handleSearch} className="d-flex">
+                                        <input
+                                            type="text"
+                                            placeholder="Search..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="form-control me-2"
+                                        />
+                                        <button type="submit" className="btn btn-primary">
+                                            Search
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
-                            {/* Tab content */}
                             <div className="row">
-                                {students?.map((s, index) => (
+                                {students?.map((s) => (
                                     <div key={s.username} className="col-lg-4 col-md-6 col-12">
                                         <div className="card mb-4 position-relative">
                                             <button
