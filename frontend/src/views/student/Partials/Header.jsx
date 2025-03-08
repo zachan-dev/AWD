@@ -4,6 +4,12 @@ import { ProfileContext } from "../../plugin/Context";
 function Header() {
     const [profile, setProfile] = useContext(ProfileContext);
 
+    useEffect(() => { // fetch once more profile while rendering this element
+        useAxios.get(`user/profile/${UserData()?.user_id}/`).then((res) => {
+            setProfile(res.data);
+        });
+      }, []);
+
     return (
         <div className="row align-items-center">
             <div className="col-xl-12 col-lg-12 col-md-12 col-12">
