@@ -66,6 +66,7 @@ useAxios.interceptors.request.use(
                 isRefreshing = true;
 
                 try {
+                    const refreshToken = Cookie.get("refresh_token");
                     refreshPromise = getRefreshToken(refreshToken); // Start refresh process
                     const newTokens = await refreshPromise;
 

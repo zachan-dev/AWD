@@ -1,50 +1,47 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
-
 import BaseHeader from "../partials/BaseHeader";
 import BaseFooter from "../partials/BaseFooter";
-
 import apiInstance from "../../utils/axios";
 
 function Success() {
     const [order, setOrder] = useState([]);
     const [orderMessage, setOrderMessage] = useState("");
+    const effectRan = useRef(false);
 
     const param = useParams();
     const urlParam = new URLSearchParams(window.location.search);
     const sessionId = urlParam.get("session_id");
 
-    console.log(sessionId);
-    console.log(param);
-
     useEffect(() => {
-        const formdata = new FormData();
+        if (!effectRan.current) {
+            const formdata = new FormData();
+            formdata.append("order_oid", param.order_oid);
+            formdata.append("session_id", sessionId);
 
-        formdata.append("order_oid", param.order_oid);
-        formdata.append("session_id", sessionId);
-
-        setOrderMessage("Processing Payment");
-
-        try {
-            apiInstance.post(`payment/payment-success/`, formdata).then((res) => {
-                console.log(res.data);
-                setOrderMessage(res.data.message);
-            });
-        } catch (error) {
-            console.log(error);
+            setOrderMessage("Processing Payment");
+            try {
+                apiInstance.post("payment/payment-success/", formdata)
+                    .then((res) => {
+                        console.log(res.data);
+                        setOrderMessage(res.data.message);
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                    });
+                effectRan.current = true;
+            } catch (error) {
+                console.log(error);
+            }
         }
-    }, []);
-
-    console.log(orderMessage);
+    }, [param.order_oid, sessionId]);
 
     return (
         <>
             <BaseHeader />
-
-            <section className="pt-0  position-relative overflow-hidden my-auto">
+            <section className="pt-0 position-relative overflow-hidden my-auto">
                 <div className="container position-relative">
                     <div className="row g-5 align-items-center justify-content-center">
-                        {/* Payment Successful */}
                         {orderMessage === "Payment Successful" && (
                             <>
                                 <div className="col-lg-5">
@@ -56,8 +53,6 @@ function Success() {
                                 </div>
                             </>
                         )}
-
-                        {/* Already Paid */}
                         {orderMessage === "Already Paid" && (
                             <>
                                 <div className="col-lg-5">
@@ -69,23 +64,19 @@ function Success() {
                                 </div>
                             </>
                         )}
-
-                        {/* Processing */}
                         {orderMessage === "Processing Payment" && (
                             <>
                                 <div className="col-lg-5">
                                     <h1 className="text-warning">
                                         Processing Payment <i className="fas fa-spinner fa-spin"></i>
                                     </h1>
-                                    <p> Hey there, hold on while we process your payment, please do not leave the page.</p>
+                                    <p>Hey there, hold on while we process your payment, please do not leave the page.</p>
                                 </div>
                                 <div className="col-lg-7 text-center">
-                                    <img sty src="https://www.icegif.com/wp-content/uploads/2023/07/icegif-1259.gif" className="h-300px h-sm-400px h-md-500px h-xl-700px" alt="" />
+                                    <img src="https://www.icegif.com/wp-content/uploads/2023/07/icegif-1259.gif" className="h-300px h-sm-400px h-md-500px h-xl-700px" alt="" />
                                 </div>
                             </>
                         )}
-
-                        {/* Failed */}
                         {orderMessage === "Payment Failed" && (
                             <>
                                 <div className="col-lg-5">
@@ -98,14 +89,13 @@ function Success() {
                                     </button>
                                 </div>
                                 <div className="col-lg-7 text-center">
-                                    <img sty src="https://media3.giphy.com/media/h4OGa0npayrJX2NRPT/giphy.gif?cid=790b76117pc6298jypyph0liy6xlp3lzb7b2y405ixesujeu&ep=v1_stickers_search&rid=giphy.gif&ct=e" className="h-300px h-sm-400px h-md-500px h-xl-700px" alt="" />
+                                    <img src="https://media3.giphy.com/media/h4OGa0npayrJX2NRPT/giphy.gif?cid=790b76117pc6298jypyph0liy6xlp3lzb7b2y405ixesujeu&ep=v1_stickers_search&rid=giphy.gif&ct=e" className="h-300px h-sm-400px h-md-500px h-xl-700px" alt="" />
                                 </div>
                             </>
                         )}
                     </div>
                 </div>
             </section>
-
             <BaseFooter />
         </>
     );

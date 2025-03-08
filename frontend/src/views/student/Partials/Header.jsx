@@ -1,5 +1,7 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { ProfileContext } from "../../plugin/Context";
+import useAxios from "../../../utils/useAxios";
+import UserData from "../../plugin/UserData";
 
 function Header() {
     const [profile, setProfile] = useContext(ProfileContext);

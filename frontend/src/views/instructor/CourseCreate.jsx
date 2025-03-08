@@ -9,6 +9,7 @@ import BaseFooter from "../partials/BaseFooter";
 import { Link, useNavigate } from "react-router-dom";
 
 import useAxios from "../../utils/useAxios";
+import { setAuthUser, getRefreshToken, logout } from "../../utils/auth";
 import Swal from "sweetalert2";
 
 function CourseCreate() {
@@ -104,6 +105,31 @@ function CourseCreate() {
 
         const response = await useAxios.post(`teacher/course-create/`, json);
         console.log(response.data);
+        // force refresh the access token
+
+        let refreshPromise = null;
+        try {
+            refreshPromise = getRefreshToken(refreshToken); // Start refresh process
+            const newTokens = await refreshPromise;
+
+            if (newTokens) {
+                setAuthUser(newTokens.data.access, newTokens.data.refresh);
+                console.log("[useAxios] Refresh successful. New token:", newTokens.data.access);
+                accessToken = newTokens.access;
+                config.headers.Authorization = `Bearer ${newTokens.data.access}`;
+            } else {
+                console.error("[useAxios] Refresh failed. Logging out.");
+                logout();
+                return Promise.reject("[useAxios] Session expired, logging out.");
+            }
+        } catch (error) {
+            console.error("[useAxios] Refresh failed, logging out:", error);
+            logout();
+            return Promise.reject("[useAxios] Session expired, logging out.");
+        } finally {
+            refreshPromise = null;
+        }
+        
         navigate(`/instructor/edit-course/${response?.data?.course_id}/`);
         Swal.fire({
             icon: "success",
